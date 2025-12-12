@@ -1,0 +1,23 @@
+
+services:
+  nginx:
+    build:
+      context: ./requirements/nginx
+    container_name: nginx
+    ports:
+      - "443:443"
+    networks:
+      - inception
+    restart: always
+  wordpress:
+    build:
+      context: ./requirements/wordpress
+    container_name: wordpress
+    networks:
+      - inception
+    restart: always
+
+networks:
+  inception:
+    driver: bridge
+
