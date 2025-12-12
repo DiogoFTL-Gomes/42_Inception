@@ -16,10 +16,10 @@ RUN mkdir -p /var/www/html
 COPY tools/index.html /var/www/html/index.html
 
 # Copia entrypoint
-COPY tools/docker-entrypoint.sh /usr/local/bin/
-RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+COPY tools/wp-entrypoint.sh /usr/local/bin/
+RUN chmod +x /usr/local/bin/wp-entrypoint.sh
 
 # Arranca php-fpm no foreground
-ENTRYPOINT ["docker-entrypoint.sh"]
+ENTRYPOINT ["wp-entrypoint.sh"]
 CMD ["php-fpm", "-F"]
 
