@@ -5,6 +5,8 @@ services:
     container_name: nginx
     ports:
       - "443:443"
+    volumes:
+      - wordpress_data:/var/www/html
     networks:
       - inception
     restart: always
@@ -23,8 +25,11 @@ services:
       DB_PASSWORD_FILE: ${DB_PASSWORD_FILE}
       WP_ADMIN_USER: ${WP_ADMIN_USER}
       WP_ADMIN_PASSWORD_FILE: ${WP_ADMIN_PASSWORD_FILE}
+      WP_ADMIN_EMAIL: ${WP_ADMIN_EMAIL}
       WP_TITLE: ${WP_TITLE}
       WP_URL: ${WP_URL}
+    volumes:
+      - wordpress_data:/var/www/html
     secrets:
       - db_password
       - db_admin_password
@@ -52,6 +57,7 @@ secrets:
 
 volumes:
   mariadb_data:
+  wordpress_data:
 
 networks:
   inception:

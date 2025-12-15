@@ -11,8 +11,8 @@ if [ ! -d "/var/lib/mysql/mysql" ]; then
     mysqld --initialize-insecure --user=mysql
 
     # Lê passwords a partir de Docker secrets
-    ROOT_PASS=$(cat /run/secrets/db_root_password.txt)
-    WP_PASS=$(cat /run/secrets/db_password.txt)
+    ROOT_PASS=$(cat /run/secrets/db_root_password)
+    WP_PASS=$(cat /run/secrets/db_password)
 
     # Start temporário do MariaDB
     mysqld --skip-networking --socket=/var/run/mysqld/mysqld.sock &
@@ -34,4 +34,5 @@ EOSQL
 fi
 
 # Start MariaDB normalmente
-exec "$@"
+exec su mysql -s /bin/bash -c "$*"
+
