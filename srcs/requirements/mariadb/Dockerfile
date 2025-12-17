@@ -1,8 +1,11 @@
 FROM debian:bullseye
 
 # Instala MariaDB
-RUN apt-get update && apt-get install -y mariadb-server \
+RUN apt-get update && apt-get install -y \
+    mariadb-server \
+    gosu \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Garante diretório de runtime para o socket
 RUN mkdir -p /var/run/mysqld \

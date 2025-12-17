@@ -12,24 +12,32 @@ chown -R www-data:www-data /run/php
 DB_PASS="$(cat $DB_PASSWORD_FILE)"
 
 # Espera pela base de dados estar pronta
-while ! mysqladmin ping \
+echo "Aguardando MariaDB com autenticação real..."
+until mysql \
     -h "$DB_HOST" \
     -u "$DB_USER" \
     -p"$DB_PASS" \
-    --silent; do
-    echo "Aguardando MariaDB..."
+    "$DB_NAME" \
+    -e "SELECT 1;" >/dev/null 2>&1; do
     sleep 2
-    WAIT_TIMEOUT=$((WAIT_TIMEOUT-2))
-    if [ $WAIT_TIMEOUT -le 0 ]; then
-        echo "Erro: MariaDB não respondeu a tempo"
-        exit 1
-    fi
 done
+
+# Descarregar WordPress
+if [ ! -f /var/www/html/wp-load.php ]; then
+    echo "A descarregar WordPress..."
+    wp core download \
+        --allow-root \
+        --path=/var/www/html
+fi
+
+rm -f /var/www/html/wp-config.php
 
 # Cria wp-config.php se não existir
 if [ ! -f /var/www/html/wp-config.php ]; then
     echo "Criando wp-config.php..."
     wp config create \
+        --allow-root \
+        --path=/var/www/html \
         --dbname="$DB_NAME" \
         --dbuser="$DB_USER" \
         --dbpass="$(cat $DB_PASSWORD_FILE)" \
@@ -41,6 +49,7 @@ fi
 if ! wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
     echo "Instalando WordPress..."
     wp core install \
+        --allow-root \
         --url="$WP_URL" \
         --title="$WP_TITLE" \
         --admin_user="$WP_ADMIN_USER" \
