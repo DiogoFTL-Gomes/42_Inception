@@ -18,6 +18,8 @@ services:
     networks:
       - inception
     restart: always
+    expose:
+      - "9000"
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}

@@ -17,7 +17,6 @@ RUN openssl req -x509 -nodes -days 365 \
 
 # Copiar configuração personalizada
 COPY conf/nginx.conf /etc/nginx/nginx.conf
-COPY tools/index.html /var/www/html/index.html
 # Copiar o entrypoint
 COPY tools/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

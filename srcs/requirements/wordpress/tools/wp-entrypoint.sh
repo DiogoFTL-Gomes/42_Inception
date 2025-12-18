@@ -59,5 +59,8 @@ if ! wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
         --skip-email
 fi
 
+# Arranca PHP-FPM em TCP 9000
+exec php-fpm7.4 -y /etc/php/7.4/fpm/php-fpm.conf -F
+
 # Executa php-fpm no foreground
-exec "$@"
+#exec "$@"
