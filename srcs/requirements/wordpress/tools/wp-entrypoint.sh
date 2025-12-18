@@ -59,6 +59,10 @@ if ! wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
         --skip-email
 fi
 
+# Remove sockets antigos
+rm -f /run/php/php7.4-fpm.sock
+rm -f /var/run/php/php7.4-fpm.sock
+
 # Arranca PHP-FPM em TCP 9000
 exec php-fpm7.4 -y /etc/php/7.4/fpm/php-fpm.conf -F
 
