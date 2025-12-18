@@ -8,7 +8,7 @@ ROOT_PASS=$(cat /run/secrets/db_root_password)
 WP_PASS=$(cat /run/secrets/db_password)
 
 # Arranca MariaDB temporariamente
-mysqld --skip-networking --socket=/var/run/mysqld/mysqld.sock &
+gosu mysql mysqld --skip-networking --socket=/var/run/mysqld/mysqld.sock &
 pid="$!"
 
 # Espera pelo socket
