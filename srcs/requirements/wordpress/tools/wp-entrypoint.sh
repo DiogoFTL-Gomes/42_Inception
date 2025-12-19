@@ -64,7 +64,7 @@ rm -f /run/php/php7.4-fpm.sock
 rm -f /var/run/php/php7.4-fpm.sock
 
 # Arranca PHP-FPM em TCP 9000
-exec php-fpm7.4 -y /etc/php/7.4/fpm/php-fpm.conf -F
+exec php-fpm7.4 --nodaemonize -y /etc/php/7.4/fpm/php-fpm.conf
 
 # Executa php-fpm no foreground
 #exec "$@"

@@ -3,6 +3,7 @@ FROM debian:bullseye
 RUN apt-get update && apt-get install -y \
     nginx \
     openssl \
+    net-tools iproute2 iputils-ping netcat\
     && rm -rf /var/lib/apt/lists/*
 
 # Criar diretório para certificados

@@ -3,6 +3,7 @@ FROM debian:bullseye
 # Instala php-fpm e utilitários
 RUN apt-get update && apt-get install -y \
     php-fpm php-mysql php-cli wget unzip mariadb-client \
+    net-tools iproute2 iputils-ping netcat\
     && rm -rf /var/lib/apt/lists/*
 
 
