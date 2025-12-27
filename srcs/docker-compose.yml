@@ -1,23 +1,30 @@
 services:
-  nginx:
+  mariadb:
     build:
-      context: ./requirements/nginx
-    container_name: nginx
-    ports:
-      - "443:443"
-    volumes:
-      - wordpress_data:/var/www/html
+      context: ./requirements/mariadb
+    container_name: "mariadb"
+    restart: always
     networks:
       - inception
-    restart: always
-
+    environment:
+      MARIADB_ROOT_PASSWORD_FILE: ${DB_ROOT_PASSWORD_FILE}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD_FILE: ${DB_PASSWORD_FILE}
+    secrets:
+      - db_root_password
+      - db_password
+    volumes:
+      - mariadb_data:/var/lib/mysql
   wordpress:
     build:
       context: ./requirements/wordpress
     container_name: wordpress
+    restart: always
     networks:
       - inception
-    restart: always
+    depends_on:
+      - mariadb
     expose:
       - "9000"
     environment:
@@ -36,23 +43,6 @@ services:
       - db_password
       - db_admin_password
 
-  mariadb:
-    build:
-      context: ./requirements/mariadb
-    container_name: mariadb
-    restart: always
-    networks:
-      - inception
-    environment:
-      MARIADB_ROOT_PASSWORD_FILE: ${DB_ROOT_PASSWORD_FILE}
-      MARIADB_DATABASE: ${DB_NAME}
-      MARIADB_USER: ${DB_USER}
-      MARIADB_PASSWORD_FILE: ${DB_PASSWORD_FILE}
-    secrets:
-      - db_root_password
-      - db_password
-    volumes:
-      - mariadb_data:/var/lib/mysql
 
 secrets:
   db_root_password:

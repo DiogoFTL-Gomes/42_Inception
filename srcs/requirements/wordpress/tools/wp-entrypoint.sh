@@ -1,70 +1,45 @@
 #!/bin/bash
 set -e
 
-# Corrige permissões
-chown -R www-data:www-data /var/www/html
-chmod -R 755 /var/www/html
-
-# Garante que /run/php existe para o socket do php-fpm
+# Runtime do PHP
 mkdir -p /run/php
 chown -R www-data:www-data /run/php
 
-DB_PASS="$(cat $DB_PASSWORD_FILE)"
+WP_PATH="/var/www/html"
 
-# Espera pela base de dados estar pronta
-echo "Aguardando MariaDB com autenticação real..."
-until mysql \
-    -h "$DB_HOST" \
-    -u "$DB_USER" \
-    -p"$DB_PASS" \
-    "$DB_NAME" \
-    -e "SELECT 1;" >/dev/null 2>&1; do
-    sleep 2
-done
+DB_PASS="$(cat "$DB_PASSWORD_FILE")"
+ADMIN_PASS="$(cat "$WP_ADMIN_PASSWORD_FILE")"
 
-# Descarregar WordPress
-if [ ! -f /var/www/html/wp-load.php ]; then
-    echo "A descarregar WordPress..."
+# Download WordPress
+if [ ! -f "$WP_PATH/wp-load.php" ]; then
     wp core download \
         --allow-root \
-        --path=/var/www/html
+        --path="$WP_PATH"
 fi
 
-rm -f /var/www/html/wp-config.php
-
-# Cria wp-config.php se não existir
-if [ ! -f /var/www/html/wp-config.php ]; then
-    echo "Criando wp-config.php..."
+# Criar wp-config.php
+if [ ! -f "$WP_PATH/wp-config.php" ]; then
     wp config create \
         --allow-root \
-        --path=/var/www/html \
+        --path="$WP_PATH" \
         --dbname="$DB_NAME" \
         --dbuser="$DB_USER" \
-        --dbpass="$(cat $DB_PASSWORD_FILE)" \
+        --dbpass="$DB_PASS" \
         --dbhost="$DB_HOST" \
         --skip-check
 fi
 
-# Instala WordPress se não estiver instalado
-if ! wp core is-installed --path=/var/www/html >/dev/null 2>&1; then
-    echo "Instalando WordPress..."
+# Instalar WordPress
+if ! wp core is-installed --allow-root --path="$WP_PATH"; then
     wp core install \
         --allow-root \
+        --path="$WP_PATH" \
         --url="$WP_URL" \
         --title="$WP_TITLE" \
         --admin_user="$WP_ADMIN_USER" \
-        --admin_password="$(cat $WP_ADMIN_PASSWORD_FILE)" \
+        --admin_password="$ADMIN_PASS" \
         --admin_email="$WP_ADMIN_EMAIL" \
-        --path=/var/www/html \
         --skip-email
 fi
 
-# Remove sockets antigos
-rm -f /run/php/php7.4-fpm.sock
-rm -f /var/run/php/php7.4-fpm.sock
-
-# Arranca PHP-FPM em TCP 9000
-exec php-fpm7.4 --nodaemonize -y /etc/php/7.4/fpm/php-fpm.conf
-
-# Executa php-fpm no foreground
-#exec "$@"
+exec "$@"
