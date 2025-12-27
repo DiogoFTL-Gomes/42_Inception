@@ -1,24 +1,30 @@
 #!/bin/bash
 set -e
 
-# Runtime do PHP
+WP_PATH="/var/www/html"
+
+# Garantir que o volume existe e é writeable
+mkdir -p "$WP_PATH"
+chown -R www-data:www-data "$WP_PATH"
+
+# Runtime PHP
 mkdir -p /run/php
 chown -R www-data:www-data /run/php
 
-WP_PATH="/var/www/html"
+cd "$WP_PATH"
 
 DB_PASS="$(cat "$DB_PASSWORD_FILE")"
 ADMIN_PASS="$(cat "$WP_ADMIN_PASSWORD_FILE")"
 
 # Download WordPress
-if [ ! -f "$WP_PATH/wp-load.php" ]; then
+if [ ! -f wp-load.php ]; then
     wp core download \
         --allow-root \
         --path="$WP_PATH"
 fi
 
 # Criar wp-config.php
-if [ ! -f "$WP_PATH/wp-config.php" ]; then
+if [ ! -f wp-config.php ]; then
     wp config create \
         --allow-root \
         --path="$WP_PATH" \
