@@ -42,6 +42,8 @@ services:
     secrets:
       - db_password
       - db_admin_password
+    cap_add:
+      - SYS_PTRACE
   nginx:
     build:
       context: ./requirements/nginx
