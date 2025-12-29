@@ -41,9 +41,7 @@ services:
       - wordpress_data:/var/www/html
     secrets:
       - db_password
-      - db_admin_password
-    cap_add:
-      - SYS_PTRACE
+      - wp_admin_password
   nginx:
     build:
       context: ./requirements/nginx
@@ -63,8 +61,8 @@ secrets:
     file: ../secrets/db_root_password.txt
   db_password:
     file: ../secrets/db_password.txt
-  db_admin_password:
-    file: ../secrets/db_admin_password.txt
+  wp_admin_password:
+    file: ../secrets/wp_admin_password.txt
 
 volumes:
   mariadb_data:

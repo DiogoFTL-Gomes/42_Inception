@@ -1,20 +1,21 @@
 FROM debian:bullseye
 
-# Instala MariaDB e utilitários
+# Install MariaDB & utils
+# add these for problem solving before && rm...:
+#    netcat iputils-ping \
 RUN apt-get update && apt-get install -y \
     mariadb-server \
     gosu \
-    netcat iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
-# Cria diretório de runtime para o socket
+# make folder for socket runtime
 RUN mkdir -p /var/run/mysqld \
     && chown -R mysql:mysql /var/run/mysqld
 
-# Copia configuração
+# Copy config
 COPY conf/50-server.cnf /etc/mysql/mariadb.conf.d/50-server.cnf
 
-# Copia entrypoint
+# Copy entrypoint
 COPY tools/mariadb-entrypoint.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/mariadb-entrypoint.sh
 

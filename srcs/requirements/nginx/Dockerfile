@@ -1,38 +1,27 @@
 FROM debian:bullseye
 
+# add these for problem solving before && rm...:
+#    net-tools iproute2 iputils-ping netcat\
 RUN apt-get update && apt-get install -y \
     nginx \
     openssl \
-    net-tools iproute2 iputils-ping netcat\
     && rm -rf /var/lib/apt/lists/*
 
-# Criar diretório para certificados
+# makes folder for certificates
 RUN mkdir -p /etc/nginx/ssl
 
-# Gerar certificado self-signed
+# generate self-signed certificate
 RUN openssl req -x509 -nodes -days 365 \
     -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/server.key \
     -out /etc/nginx/ssl/server.crt \
     -subj "/C=PT/ST=Lisbon/L=Lisbon/O=42Lisboa/CN=ddiogo-f.42.fr"
 
-# Copiar configuração personalizada
+# Copy config
 COPY conf/nginx.conf /etc/nginx/nginx.conf
-# Copiar o entrypoint
+# Copy entrypoint
 COPY tools/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-# Tornar entrypoint ativo
+# activate entrypoint
 ENTRYPOINT ["/entrypoint.sh"]
-
-
-
-
-
-
-# Copiar configuração personalizada
-#COPY conf/nginx.conf /etc/nginx/nginx.conf
-#COPY tools/index.html /var/www/html/index.html
-
-# Nginx deve rodar em foreground como PID 1
-#CMD ["nginx", "-g", "daemon off;"]
