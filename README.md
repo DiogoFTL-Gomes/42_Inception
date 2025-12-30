@@ -141,8 +141,7 @@ The following resources were used as references during the development of this p
 
 ### Use of Artificial Intelligence
 
-Artificial Intelligence tools were used during this project as a learning and debugging
-assistant.
+ChatGPT 5.2 was used during this project as a learning and debugging assistant to accelerate understanding and problem-solving.
 
 AI was specifically used for:
 
@@ -152,11 +151,10 @@ AI was specifically used for:
 - Reviewing configuration files and design choices
 - Improving documentation clarity and structure
 
-AI assistance was used as a support tool to accelerate understanding and problem-solving.
 
 ## Project Design Choices
 
-This project was designed to follow the constraints of the 42 Inception subject while
+This project was designed by following the constraints of the 42 Inception subject while
 also respecting common best practices for containerized infrastructures.
 
 Docker and Docker Compose were used to orchestrate a small web stack composed of
