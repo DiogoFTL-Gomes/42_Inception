@@ -37,7 +37,7 @@ fi
 kill "$pid"
 wait "$pid"
 
-chown -R mysql:mysql /var/lib/mysql
+#chown -R mysql:mysql /var/lib/mysql
 chown -R mysql:mysql /var/run/mysqld
 
 # arranque normal
