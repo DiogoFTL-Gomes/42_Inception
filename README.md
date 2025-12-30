@@ -59,6 +59,15 @@ secrets/
 ├── db_password.txt
 └── wp_admin_password.txt
 ```
+Create required directories on the host
+
+The project requires persistent data directories on the host machine, as specified
+by the subject. These directories will be used by Docker bind mounts:
+```bash
+sudo mkdir -p /home/$(whoami)/data/mariadb
+sudo mkdir -p /home/$(whoami)/data/wordpress
+```
+
 ### - Execution
 
 To build the images and start all services:
