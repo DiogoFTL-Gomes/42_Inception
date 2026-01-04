@@ -61,7 +61,7 @@ secrets/
 ```
 Create required directories on the host
 
-The project requires persistent data directories on the host machine, as specified
+The project requires persistent data directories to house the volumes on the host machine, as specified
 by the subject. These directories will be used by Docker bind mounts:
 ```bash
 sudo mkdir -p /home/$(whoami)/data/mariadb
@@ -86,14 +86,24 @@ To stop the infrastructure:
 ```bash
 make down
 ```
-To remove containers and volumes:
+
+
+To remove containers:
 ```bash
 make clean
 ```
-To completely remove containers, volumes, images, and unused Docker resources:
+To completely remove containers, images, and unused Docker resources:
 ```bash
 make fclean
 ```
+When using bind mounts for persistent data, Docker does not manage the
+lifecycle of the files stored on the host filesystem.
+For this reason:
+- `clean` and `fclean` remove containers, images, networks and Docker volumes
+- Persistent data stored in `/home/<login>/data` is intentionally preserved
+
+This avoids accidental data loss and keeps responsibilities clearly separated
+between Docker and the host system.
 To rebuild everything from scratch:
 ```bash
 make re
@@ -228,21 +238,24 @@ This approach improves security and mirrors real-world infrastructure setups.
 
 ### Docker Volumes vs Bind Mounts
 
-**Bind mounts** directly map a host directory into a container.
-While simple, they tightly couple the container to the host filesystem and can
-lead to permission and portability issues.
+Docker provides two ways to persist data outside containers: **volumes** and
+**bind mounts**.
 
-**Docker volumes** are managed by Docker and are independent of the host directory
-structure.
+**Docker volumes** are managed by Docker itself and stored in an internal
+directory. They offer strong isolation from the host filesystem and automatic
+lifecycle management.
 
-In this project, volumes are used to:
-- Persist MariaDB data
-- Persist WordPress files across container restarts
+**Bind mounts** directly map a specific host directory into a container. This
+gives full control over where data is stored, but also requires careful handling
+of permissions and ownership.
 
-Docker volumes provide:
-- Better portability
-- Cleaner separation from the host system
-- Automatic lifecycle management by Docker
+In this project, **bind mounts are used through Docker volumes configured with
+host paths**, as required by the subject. This ensures that:
 
-They ensure that data survives container rebuilds while keeping the infrastructure
-portable and reproducible across different environments.
+- Database data is stored in `/home/login/data/mariadb`
+- WordPress files are stored in `/home/login/data/wordpress`
+- Data persists across container rebuilds
+- Files are directly accessible from the host system
+
+This approach trades some portability for transparency and explicit control over
+data location, which is acceptable and required in the context of this project.
