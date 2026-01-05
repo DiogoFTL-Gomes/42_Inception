@@ -1,8 +1,7 @@
 FROM debian:bullseye
 
 # Install MariaDB & utils
-# add these for problem solving before && rm...:
-#    netcat iputils-ping \
+# add these for problem solving before && rm...:    netcat iputils-ping \
 RUN apt-get update && apt-get install -y \
     mariadb-server \
     gosu \

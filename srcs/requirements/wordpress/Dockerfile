@@ -1,8 +1,7 @@
 FROM debian:bullseye
 
 # Install php-fpm & utilities
-# add these for problem solving before && rm...:
-#    net-tools iproute2 iputils-ping netcat\
+# add these for problem solving before && rm...:    net-tools iproute2 iputils-ping netcat\
 RUN apt-get update && apt-get install -y \
     php-fpm php-mysql php-cli wget unzip mariadb-client \
     && rm -rf /var/lib/apt/lists/*
