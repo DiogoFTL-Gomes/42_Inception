@@ -115,7 +115,9 @@ Each file must contain only the password, with no extra spaces or newlines.
   - Used to log into the WordPress admin panel
 
 ## To change a password:
-
+Passwords provided via Docker secrets are only used during the initial
+provisioning of services. Once initialized, WordPress and MariaDB store
+credentials internally in persistent data.
 ### If you want to keep data in volumes:
 - Passwords stored in Docker secrets are applied only during the initial setup.
 After initialization, credentials are stored internally by the services.

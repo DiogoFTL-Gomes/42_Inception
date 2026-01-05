@@ -26,7 +26,7 @@ through a private Docker network, ensuring isolation, security, and reproducibil
 
 This section explains how to build and run the project from scratch on a clean system.
 
-### - Requirements
+### Requirements
 
 The following tools must be installed on the host machine:
 
@@ -39,7 +39,7 @@ The project is intended to be run inside a Linux virtual machine, as required by
 
 ---
 
-### - Installation
+### Installation
 
 Clone the repository:
 
@@ -47,7 +47,7 @@ Clone the repository:
 git clone <repository_url> inception
 cd inception
 ```
-Create the required secret files inside the secrets/ directory:
+Create the required secret files inside the `secrets/` directory:
 ```bash
 mkdir -p secrets
 ```
@@ -68,7 +68,7 @@ sudo mkdir -p /home/$(whoami)/data/mariadb
 sudo mkdir -p /home/$(whoami)/data/wordpress
 ```
 
-### - Execution
+### Execution
 
 To build the images and start all services:
 ```bash
@@ -108,7 +108,7 @@ To rebuild everything from scratch:
 ```bash
 make re
 ```
-### - Accessing the Website
+### Accessing the Website
 
 Once the containers are running, open a web browser and access:
 ```text
