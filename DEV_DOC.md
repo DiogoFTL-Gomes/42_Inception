@@ -2,20 +2,23 @@
 
 ## Overview
 
-This document explains how a developer can set up, build, run, and maintain the
-**Inception** infrastructure.
+This document explains how a developer can set up, build, run, and maintain the **Inception** infrastructure.
 
-It focuses on:
-- Environment setup from scratch
-- Project configuration and secrets
+It focuses on the **internal mechanics** of the project, including:
+- Environment and directory setup
+
+- Project configuration and secrets handling
+
 - Build and execution workflow
-- Container and volume management
-- Data persistence and storage locations
 
-This document assumes basic familiarity with Docker and Linux systems.
+- Container lifecycle and orchestration
+
+- Volume usage and data persistence behavior
+
+This document assumes familiarity with Docker, Docker Compose, and basic Linux
+system administration.
 
 ---
-
 ## 1. Environment Setup
 
 ### Prerequisites
@@ -26,13 +29,10 @@ The following tools must be installed on the host system:
 - Docker Compose
 - GNU Make
 
-The project is designed to run inside a Linux virtual machine, as required by the
-42 subject.
+The project is designed to run inside a Linux virtual machine, as required by the 42 subject.
 
 ---
-
 ### Project Structure
-
 ```text
 .
 ├── Makefile
@@ -48,108 +48,145 @@ The project is designed to run inside a Linux virtual machine, as required by th
         ├── wordpress/
         └── nginx/
 ```
+- `Makefile`
+Entry point for building, running, and managing the infrastructure.
+
+- `secrets/`
+Stores sensitive credentials used at runtime via Docker secrets.
+
+- `srcs/.env`
+Defines non-sensitive configuration values and paths to secret files.
+
+- `srcs/docker-compose.yml`
+Orchestrates all services, networks, volumes, and secrets.
+
+- `requirements/`
+Contains one directory per service, each with its own Dockerfile,
+configuration files, and entrypoint scripts.
+
 ---
+## 2. Secrets and Configuration
+### Secrets Management
 
-### Secrets Configuration
+Sensitive credentials are provided using Docker secrets.
 
-All sensitive credentials are provided using Docker secrets.
-
-Create the `secrets/` directory at the project root and add the following files:
+The following files must exist under the `secrets/` directory:
 ```text
 secrets/
 ├── db_root_password.txt      # MariaDB root password
 ├── db_password.txt           # WordPress database user password
 └── wp_admin_password.txt     # WordPress administrator password
 ```
-Each file must contain only the password, without spaces or trailing newlines.
+Each file must contain **only the password**, with no trailing spaces or newlines.
+
+Secrets are mounted into containers at runtime under `/run/secrets/` and are never baked into Docker images or committed to the repository.
 
 ---
-### Environment Variables
+### Environment Variables (.env)
+The file `srcs/.env` defines non-sensitive configuration values and references secret file paths.
 
-The file srcs/.env defines non-sensitive configuration values and references
-the secret files by path.
+Typical values include:
 
-Example values include:
+- Database host, name, and user
 
-- Database host and name
+- WordPress site URL, title, and admin username
 
-- WordPress site URL and title
+- Paths to secret files mounted inside containers
 
-- Secret file paths used at runtime
-
-No plaintext passwords are stored in this file.
+**No plaintext credentials are stored in this file.** Environment variables are injected into containers by Docker Compose and consumed
+by entrypoint scripts during initialization.
 
 ---
+## 3. Build and Execution Workflow
+### Build and Startup
 
-## 2. Building and Launching the Project
-
-### Build and Start
-
-To build all images and start the full infrastructure:
+To build all images and start the infrastructure:
 ```bash
 make
 ```
-This command:
+This command performs the following actions:
 
-- Builds all Docker images
+- Builds Docker images for all services
 
-- Creates networks and containers
+- Creates the Docker network and volumes
 
-- Starts services in detached mode
+- Starts all containers in detached mode
+
+The `Makefile` acts as a thin wrapper around Docker Compose to ensure consistent and reproducible execution.
 
 ---
-### Stop and Restart
+### Stopping and Restarting Services
 
-To stop all containers:
+Available management commands include:
 ```bash
-make down
+make down      # Stop and remove containers
+make stop      # Stop containers without removing them
+make start     # Start stopped containers
+make restart   # Restart all containers
 ```
-To stop containers without removing them:
-```bash
-make stop
-```
-To restart all services:
-```bash
-make restart
-```
+
 ---
 ### Full Rebuild
 
-To remove containers, volumes, images, and rebuild everything:
+To remove containers, images, and Docker-managed resources, then rebuild everything:
 ```bash
 make re
 ```
-⚠️ When using bind mounts, persistent data directories on the host are not
-removed automatically and may require manual cleanup.
+When using bind mounts, host directories used for persistent data are not removed automatically and must be cleaned manually if a full reset is required.
 
 ---
-## 3. Container and Volume Management
+## 4. Container Lifecycle and Initialization
+### MariaDB Initialization
 
-### Viewing Container Status
-```bash
-make ps
-```
-Expected containers:
+MariaDB uses a custom entrypoint script to handle first-time initialization.
 
-- nginx
+Behavior:
 
-- wordpress
+- The database is initialized only if the data directory is empty
 
-- mariadb
+- Root and WordPress user credentials are read from Docker secrets
+
+- The WordPress database and user are created during the first startup
+
+- An initialization flag is written to prevent re-execution on subsequent runs
+
+Once initialized, MariaDB stores all data and credentials inside the persistent data directory.
 
 ---
-### Viewing Logs
+### WordPress Initialization
 
-This streams logs from all services and is useful for debugging startup issues:
-```bash
-make logs
-```
+WordPress setup is handled via WP-CLI inside the container entrypoint.
+
+Behavior:
+
+- WordPress core is downloaded only if not already present
+
+- wp-config.php is generated only once
+
+- WordPress installation is skipped if it is already installed
+
+Credentials and configuration values are applied only during the initial setup phase. Subsequent container restarts do not reapply secrets.
+
 ---
-## 4. Data Persistence
+### NGINX Runtime Behavior
 
+NGINX is configured as the single public entry point to the infrastructure.
+
+Behavior:
+
+- Serves WordPress files from the shared WordPress volume
+
+- Forwards PHP requests to the WordPress PHP-FPM container
+
+- Uses a self-signed TLS certificate
+
+- Runs in the foreground as PID 1, following Docker best practices
+
+---
+## 5. Volumes and Data Persistence
 ### Storage Locations
 
-Persistent data is stored on the host using bind mounts under:
+Persistent data is stored on the host using bind mounts located under:
 ```text
 /home/<login>/data/
 ├── mariadb/     # MariaDB database files
@@ -157,54 +194,75 @@ Persistent data is stored on the host using bind mounts under:
 ```
 These directories are mounted into containers as:
 
-- /var/lib/mysql (MariaDB)
+- `/var/lib/mysql` for MariaDB
 
-- /var/www/html (WordPress and NGINX)
+- `/var/www/html` for WordPress and NGINX
 
 ---
-
 ### Persistence Behavior
 
-Data survives container restarts and rebuilds
-
-- Data is not removed by docker-compose down -v
+- Data survives container restarts and rebuilds
 
 - Removing containers does not reset WordPress or the database
 
-- This behavior is expected when using bind mounts.
+- Docker does not manage the lifecycle of bind-mounted host directories
+
+This behavior is expected and required by the project subject.
 
 ---
 ### Resetting Persistent Data
 
-To force a full reinitialization (e.g. to apply new secrets):
+To force a complete reinitialization (for example, to apply new secrets):
 ```bash
 rm -rf /home/<login>/data/mariadb
 rm -rf /home/<login>/data/wordpress
-```
-Recreate the directories:
-```bash
+
 mkdir -p /home/<login>/data/mariadb
 mkdir -p /home/<login>/data/wordpress
 ```
-Then restart the project:
+Then restart the infrastructure:
 ```bash
 make
 ```
 ⚠️ This operation permanently deletes all stored data.
 
 ---
-## 5. Developer Notes
+## 6. Debugging and Monitoring
+### Container Status
 
-- MariaDB initialization runs only when the database directory is empty
+To inspect the state of all containers:
+```bash
+make ps
+```
+Expected running containers:
 
-- WordPress installation is skipped if wp-config.php already exists
+- `nginx`
 
-- Secrets are applied only during initial setup
+- `wordpress`
 
-- Changing passwords after initialization requires manual intervention or
-a full data reset
+- `mariadb`
 
-- This behavior ensures predictable and reproducible container startup.
+---
+### Logs
+
+To stream logs from all services:
+```bash
+make logs
+```
+This is useful for diagnosing startup issues and initialization failures.
+
+---
+## 7. Developer Notes
+
+- Secrets are consumed only during initial service setup
+
+- Changing secret values after initialization has no effect without a data reset
+
+- Entry-point scripts are idempotent and designed to run safely on restart
+
+- Bind mounts provide transparency at the cost of manual lifecycle management
+
+These design choices ensure predictable behavior and reproducible container startup.
 
 ---
 ## Conclusion
@@ -215,9 +273,10 @@ This infrastructure is designed to be:
 
 - Secure
 
-- Easy to rebuild
+- Reproducible
 
 - Explicit about data persistence
 
-Understanding how bind mounts and initialization scripts interact is essential
-for maintaining and extending this project.
+Understanding how initialization scripts, secrets, and bind mounts interact is essential for maintaining, extending, or debugging this project.
+
+---
