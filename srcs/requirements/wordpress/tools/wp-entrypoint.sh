@@ -16,6 +16,14 @@ cd "$WP_PATH"
 DB_PASS="$(cat "$DB_PASSWORD_FILE")"
 ADMIN_PASS="$(cat "$WP_ADMIN_PASSWORD_FILE")"
 
+echo "Waiting for MariaDB..."
+
+until mariadb -h"$DB_HOST" -u"$DB_USER" -p"$(cat $DB_PASSWORD_FILE)" -e "SELECT 1" >/dev/null 2>&1; do
+    sleep 2
+done
+
+echo "MariaDB is ready."
+
 # Download WordPress
 if [ ! -f wp-load.php ]; then
     wp core download \
